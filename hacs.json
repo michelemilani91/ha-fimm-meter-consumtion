@@ -1,0 +1,13 @@
+{
+  "name": "FIMM Meter Consumption",
+  "content_in_root": false,
+  "domain": "fimm_meter_consumption",
+  "author": "michelemilani",
+  "documentation": "https://github.com/michelemilani91/ha-fimm-meter-consumtion",
+  "description": "Home Assistant integration for the CADF (easy4-cwm) customer portal: meter reading, consumption, bills average price, last bill amount and ARERA tariff.",
+  "version": "0.4.0",
+  "requirements": [],
+  "codeowners": ["@michelemilani91"],
+  "issue_tracker": "https://github.com/michelemilani91/ha-fimm-meter-consumtion/issues",
+  "type": "integration"
+}

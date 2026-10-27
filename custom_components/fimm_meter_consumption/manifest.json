@@ -1,0 +1,11 @@
+{
+  "domain": "fimm_meter_consumption",
+  "name": "FIMM Meter Consumption",
+  "version": "0.4.0",
+  "config_flow": true,
+  "documentation": "https://github.com/michelemilani/fimm_meter_consumption",
+  "iot_class": "cloud_polling",
+  "integration_type": "service",
+  "codeowners": ["@michelemilani"],
+  "requirements": []
+}

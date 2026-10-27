@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connetti al contatore FIMM",
+        "description": "Inserisci le credenziali CADF e i dati della fornitura.",
+        "data": {
+          "username": "Nome utente",
+          "password": "Password",
+          "contract_code": "Codice contratto",
+          "supply_type": "Tipo fornitura",
+          "supply_number": "Numero fornitura",
+          "base_url": "URL base API"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossibile connettersi all'API.",
+      "invalid_auth": "Username o password non validi."
+    },
+    "abort": {
+      "already_configured": "Questa fornitura è già configurata."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Bollette",
+        "description": "Codice fornitura usato dall'area bollette dello sportello (es. 90045396). Lascia vuoto per disattivare le bollette.",
+        "data": {
+          "bill_supply_code": "Codice fornitura bollette"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "meter_reading": { "name": "Lettura contatore" },
+      "consumption": { "name": "Consumo" },
+      "average_price": { "name": "Prezzo medio" },
+      "tariff": { "name": "Tariffa" },
+      "last_bill_amount": { "name": "Importo ultima bolletta" }
+    }
+  }
+}

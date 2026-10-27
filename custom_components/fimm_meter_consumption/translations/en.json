@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to FIMM Meter",
+        "description": "Enter your CADF credentials and supply details.",
+        "data": {
+          "username": "Username",
+          "password": "Password",
+          "contract_code": "Contract code",
+          "supply_type": "Supply type",
+          "supply_number": "Supply number",
+          "base_url": "API base URL"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the API.",
+      "invalid_auth": "Invalid username or password."
+    },
+    "abort": {
+      "already_configured": "This supply is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Bills",
+        "description": "Supply code used by the bills area of the portal (e.g. 90045396). Leave empty to disable bills.",
+        "data": {
+          "bill_supply_code": "Bills supply code"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "meter_reading": { "name": "Meter reading" },
+      "consumption": { "name": "Consumption" },
+      "average_price": { "name": "Average price" },
+      "tariff": { "name": "Tariff" },
+      "last_bill_amount": { "name": "Last bill amount" }
+    }
+  }
+}
