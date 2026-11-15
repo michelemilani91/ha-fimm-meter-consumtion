@@ -6,8 +6,11 @@ customer portal (easy4-cwm, `PortaleDV`) and derives consumption, bill costs and
 ## Features
 
 - Login with the portal credentials (session cookie, tenant in the `X-Tenant` header).
-- Meter reading polled every 6 hours; consumption computed as the delta between readings.
+- Meter reading polled every 6 hours; consumption computed from the portal's reading history
+  (latest reading minus the previous different one), so it survives restarts and reloads.
 - Bills (optional): real average price €/m³ over the last 12 months and the last bill amount.
+  If the portal times out the last valid data stays available and the fetch is retried
+  after 30 minutes.
 - Public ARERA tariff of the tenant, refreshed monthly.
 - Config flow + options flow, translations in English and Italian.
 

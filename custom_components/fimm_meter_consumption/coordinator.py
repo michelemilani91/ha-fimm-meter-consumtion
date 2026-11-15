@@ -18,6 +18,8 @@ from .const import (
     BILLS_AVERAGE_DAYS,
     BILLS_KEYS_PATH,
     BILLS_PATH,
+    BILLS_RETRY_MINUTES,
+    BILLS_UPDATE_HOURS,
     CONF_BASE_URL,
     CONF_BILL_SUPPLY_CODE,
     CONF_CONTRACT_CODE,
@@ -117,6 +119,9 @@ class FimmMeterCoordinator(DataUpdateCoordinator[float]):
         self._contract_code = entry.data[CONF_CONTRACT_CODE]
         self._supply_type = entry.data[CONF_SUPPLY_TYPE]
         self._supply_number = entry.data[CONF_SUPPLY_NUMBER]
+        # Ultimo consumo secondo lo storico letture dello sportello (vedi last_consumption)
+        self.previous_reading: float | None = None
+        self.consumption: float | None = None
 
     async def _async_update_data(self) -> float:
         return await self.hass.async_add_executor_job(self._fetch)
@@ -138,7 +143,11 @@ class FimmMeterCoordinator(DataUpdateCoordinator[float]):
             raise UpdateFailed(f"Unexpected payload shape: {err}") from err
         if value is None:
             raise UpdateFailed("Empty reading in API response")
-        return float(value)
+        current = float(value)
+        self.previous_reading, self.consumption = last_consumption(
+            parse_readings(payload), current
+        )
+        return current
 
 
 class FimmBillsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -154,7 +163,7 @@ class FimmBillsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_bills",
-            update_interval=timedelta(hours=12),
+            update_interval=timedelta(hours=BILLS_UPDATE_HOURS),
         )
         self._client = _CadfClient(entry)
         self._contract_code = entry.data[CONF_CONTRACT_CODE]
@@ -163,7 +172,13 @@ class FimmBillsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._supply_code = entry.options.get(CONF_BILL_SUPPLY_CODE)
 
     async def _async_update_data(self) -> dict[str, Any]:
-        return await self.hass.async_add_executor_job(self._fetch)
+        try:
+            data = await self.hass.async_add_executor_job(self._fetch)
+        except UpdateFailed:
+            self.update_interval = timedelta(minutes=BILLS_RETRY_MINUTES)
+            raise
+        self.update_interval = timedelta(hours=BILLS_UPDATE_HOURS)
+        return data
 
     def _fetch(self) -> dict[str, Any]:
         try:
@@ -325,6 +340,24 @@ def parse_readings(payload: Any) -> list[tuple[date, float]]:
             out.append((d, v))
     out.sort()
     return out
+
+
+def last_consumption(
+    readings: list[tuple[date, float]], current: float
+) -> tuple[float | None, float | None]:
+    """(lettura precedente, consumo) dallo storico dello sportello.
+
+    La lettura precedente è la più recente con valore diverso da quella attuale. Ricavarla
+    dallo storico, invece che dalle letture viste a runtime, la rende indipendente da
+    riavvii e ricariche. (None, None) se lo storico non basta o il contatore è tornato indietro.
+    """
+    for _, value in reversed(readings):
+        if value == current:
+            continue
+        if value < current:
+            return value, round(current - value, 3)
+        break
+    return None, None
 
 
 def compute_average(

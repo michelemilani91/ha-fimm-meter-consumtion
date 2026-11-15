@@ -22,6 +22,9 @@ READINGS_PATH = "/api/v1/meter-readings"
 BILLS_KEYS_PATH = "/api/v1/bills/keys"
 BILLS_PATH = "/api/v1/bills"
 BILLS_AVERAGE_DAYS = 365
+BILLS_UPDATE_HOURS = 12
+# Dopo un errore (timeout dello sportello) si ritenta presto invece di aspettare 12 ore
+BILLS_RETRY_MINUTES = 30
 
 # Tariffe pubbliche del calcolatore di ripartizione (nessun login)
 TARIFFS_PATH = "/api/v1/bill-split/tariffs"

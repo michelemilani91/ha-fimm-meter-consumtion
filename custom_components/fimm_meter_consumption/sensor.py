@@ -111,27 +111,39 @@ class FimmConsumptionSensor(_FimmBase, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
-        if last and last.state not in (None, "unknown", "unavailable"):
-            try:
-                self._consumption = float(last.state)
-            except ValueError:
-                pass
+        if last:
+            if last.state not in (None, "unknown", "unavailable"):
+                try:
+                    self._consumption = float(last.state)
+                except ValueError:
+                    pass
             prev = (last.attributes or {}).get("previous_reading")
             if prev is not None:
                 try:
                     self._previous_reading = float(prev)
                 except (TypeError, ValueError):
                     pass
+        # Il coordinator ha già i dati del primo refresh: senza questo il sensore
+        # resterebbe vuoto fino all'aggiornamento successivo (6 ore)
+        self._sync()
+
+    def _sync(self) -> None:
+        current = self.coordinator.data
+        if current is None:
+            return
+        if self.coordinator.consumption is not None:
+            # Dallo storico dello sportello: non dipende da riavvii o ricariche
+            self._consumption = self.coordinator.consumption
+            self._previous_reading = self.coordinator.previous_reading
+            return
+        # Storico insufficiente: differenza tra le letture viste a runtime
+        if self._previous_reading is not None and current != self._previous_reading:
+            self._consumption = round(max(current - self._previous_reading, 0), 3)
+        self._previous_reading = current
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        current = self.coordinator.data
-        if current is not None:
-            if self._previous_reading is not None and current != self._previous_reading:
-                self._consumption = round(
-                    max(current - self._previous_reading, 0), 3
-                )
-            self._previous_reading = current
+        self._sync()
         self.async_write_ha_state()
 
     @property
@@ -154,6 +166,12 @@ class _FimmBillsBase(CoordinatorEntity[FimmBillsCoordinator], SensorEntity):
         self._attr_translation_key = key
         self._attr_unique_id = f"{entry.entry_id}_{key}"
         self._attr_device_info = _device_info(entry)
+
+    @property
+    def available(self) -> bool:
+        # Un timeout dello sportello non deve svuotare i sensori: restano gli ultimi
+        # dati validi finché il coordinator ne ha (le bollette cambiano ogni trimestre)
+        return self.coordinator.data is not None
 
     @property
     def _last(self) -> dict[str, Any] | None:
